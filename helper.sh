@@ -1,37 +1,70 @@
-#!/bin/sh
+#!/bin/bash
 
-check_user_details() {
-    echo "Are you sure you have configured your local git credentials?"
-    read -p "If not you can configure now [Y/y]" ch
-    if [[ $ch == "Y" || $ch == "y" ]]; then
-        read -p "Enter your github email : " git_email
-        read -p "Enter your gihub username : " git_username
-        echo "Setting your git email and username....."
-        sleep 2
-        git config --global user.name "$git_username"
-        git config --global user.email "$git_email"
-        echo "Your credentails have been set successfully!!"
-        sleep 1
+# Colors for better readability
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_color() {
+    local color=$1
+    local message=$2
+    echo -e "${color}${message}${NC}"
+}
+
+# Function to check if git is installed
+check_git_installed() {
+    if ! command -v git &> /dev/null; then
+        print_color "$RED" "Git is not installed. Please install Git and try again."
+        exit 1
     fi
 }
 
+# Function to check user details
+check_user_details() {
+    print_color "$YELLOW" "Checking your Git configuration..."
+    local git_name=$(git config --global user.name)
+    local git_email=$(git config --global user.email)
 
-function show_menu() {
-    echo "============================================================"
-    echo "                      Git Manager                           "
-    echo "============================================================"
-    echo "1. Initialize Git Repository --check if repo is initialized or not"
-    echo "2. Check Git Status --get the status of the repository"
-    echo "3. Add Files --add files to the staging area"
-    echo "4. Commit Changes"
-    echo "5. Push to Remote"
-    echo "6. Pull from Remote"
-    echo "7. Branch Operations"
-    echo "8. Exit"
-    echo "=============================="
+    if [[ -z "$git_name" || -z "$git_email" ]]; then
+        print_color "$YELLOW" "Your Git credentials are not fully configured."
+        read -p "Would you like to configure them now? [Y/n]: " ch
+        if [[ $ch == "Y" || $ch == "y" || $ch == "" ]]; then
+            read -p "Enter your GitHub username: " git_username
+            read -p "Enter your GitHub email: " git_email
+            print_color "$BLUE" "Setting your Git email and username..."
+            git config --global user.name "$git_username"
+            git config --global user.email "$git_email"
+            print_color "$GREEN" "Your credentials have been set successfully!"
+        fi
+    else
+        print_color "$GREEN" "Your Git credentials are already configured:"
+        echo "Name: $git_name"
+        echo "Email: $git_email"
+    fi
 }
 
-function read_choice() {
+# Function to show menu
+show_menu() {
+    clear
+    print_color "$BLUE" "============================================================"
+    print_color "$BLUE" "                      Git Manager                           "
+    print_color "$BLUE" "============================================================"
+    echo "1. Initialize a new Git repository"
+    echo "2. Check the status of your repository"
+    echo "3. Add files to the staging area"
+    echo "4. Commit your changes"
+    echo "5. Push your changes to GitHub"
+    echo "6. Pull the latest changes from GitHub"
+    echo "7. Work with branches"
+    echo "8. Exit Git Manager"
+    print_color "$BLUE" "============================================================"
+}
+
+# Function to read user choice
+read_choice() {
     read -p "Enter your choice [1-8]: " choice
     case $choice in
         1) initialize_repo ;;
@@ -41,82 +74,223 @@ function read_choice() {
         5) push_remote ;;
         6) pull_remote ;;
         7) branch_menu ;;
-        8) echo "Exiting Git Manager. Goodbye!"; exit 0 ;;
-        *) echo "Invalid choice. Please try again."; sleep 2 ;;
+        8) print_color "$GREEN" "Exiting Git Manager. Goodbye!"; exit 0 ;;
+        *) print_color "$RED" "Invalid choice. Please try again."; sleep 2 ;;
     esac
 }
 
+# Function to check if current directory is a Git repository
 check_git_repo_status() {
-    if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    if git rev-parse --is-inside-work-tree &> /dev/null; then
         return 0  # Repo exists
     else
         return 1  # Repo does not exist
     fi
 }
 
+# Function to initialize a new Git repository
 initialize_repo() {
     clear
     if check_git_repo_status; then
-        echo "Git repository already initialized."
+        print_color "$YELLOW" "A Git repository is already initialized in this directory."
     else
-        read -p "Do you want to initialize a git repo (locally) here? [Y/y]: " answer
-        if [[ $answer == "Y" || $answer == "y" ]]; then
-            git init > /dev/null 2>&1
-            echo "Initialized empty Git repository."
+        print_color "$YELLOW" "This will create a new Git repository in the current directory."
+        read -p "Do you want to proceed? [Y/n]: " answer
+        if [[ $answer == "Y" || $answer == "y" || $answer == "" ]]; then
+            git init &> /dev/null
+            print_color "$GREEN" "Initialized empty Git repository in $(pwd)/.git/"
         else
-            echo "Git repository initialization aborted."
+            print_color "$YELLOW" "Git repository initialization aborted."
         fi
     fi
+    read -p "Press Enter to continue..."
 }
-
 
 # Function to display Git status
 check_status() {
     clear
-    echo "Git status incoming...."
-    sleep 1
-    if ! git status > /dev/null 2>&1;then
-        echo "Git repo not initialized here"
+    print_color "$BLUE" "Checking Git status..."
+    if ! check_git_repo_status; then
+        print_color "$RED" "This directory is not a Git repository."
     else
         git status
     fi
+    read -p "Press Enter to continue..."
 }
 
-add_files(){
+# Function to add files to staging area
+add_files() {
     if ! check_git_repo_status; then
-        echo "Git repo not initialized"
+        print_color "$RED" "This directory is not a Git repository."
     else
         clear
-        read -p "Do you want to add all files? [Y/y]" ch
-        if [[ $ch == "Y" || $ch == "y" ]]; then
-            echo "Adding all files to the staging area...."
-            sleep 2
-            git add .
-            echo "Done adding all files to staging area"
-        else
-            clear
-            echo "Here are the files in this directory"
-            ls
-            read -p "Choose which file you want to add to the staging area : " file_name
-            echo "Adding $file_name to staging area"
-            sleep 2
-            git add "$file_name"
-            echo "Added $file_name to the staging area."
-        fi
+        print_color "$YELLOW" "Do you want to:"
+        echo "1. Add all files"
+        echo "2. Add specific files"
+        read -p "Enter your choice [1-2]: " ch
+        case $ch in
+            1)
+                print_color "$BLUE" "Adding all files to the staging area..."
+                git add .
+                print_color "$GREEN" "All files have been added to the staging area."
+                ;;
+            2)
+                clear
+                print_color "$BLUE" "Files in this directory:"
+                ls -1
+                echo
+                read -p "Enter the name of the file you want to add (or 'q' to quit): " file_name
+                while [[ $file_name != "q" ]]; do
+                    if [[ -f "$file_name" ]]; then
+                        git add "$file_name"
+                        print_color "$GREEN" "Added $file_name to the staging area."
+                    else
+                        print_color "$RED" "File $file_name not found."
+                    fi
+                    read -p "Enter another file name (or 'q' to quit): " file_name
+                done
+                ;;
+            *)
+                print_color "$RED" "Invalid choice."
+                ;;
+        esac
     fi
+    read -p "Press Enter to continue..."
 }
 
-commit_changes(){
-if ! check_git_repo_status; then
-    echo "Git repo not initialized"
-else
-    read -p "Do you want to commit the change? [y/Y]" ch
-    if [[ $ch == "Y" || $ch == "y" ]]; then
-        read -p "Enter the commit message : " commit_msg
-        sleep 1
-        echo "commiting....."
-        git commit -m "$commit_msg"
-        echo "Changes commited"
+# Function to commit changes
+commit_changes() {
+    if ! check_git_repo_status; then
+        print_color "$RED" "This directory is not a Git repository."
+    else
+        clear
+        git status
+        read -p "Do you want to commit the changes? [Y/n]: " ch
+        if [[ $ch == "Y" || $ch == "y" || $ch == "" ]]; then
+            read -p "Enter a commit message: " commit_msg
+            git commit -m "$commit_msg"
+            print_color "$GREEN" "Changes committed successfully."
+        else
+            print_color "$YELLOW" "Commit aborted."
+        fi
     fi
-fi
+    read -p "Press Enter to continue..."
+}
+
+# Function to push changes to remote repository
+push_remote() {
+    if ! check_git_repo_status; then
+        print_color "$RED" "This directory is not a Git repository."
+    else
+        clear
+        print_color "$YELLOW" "Pushing changes to remote repository..."
+        if ! git remote -v | grep -q 'origin'; then
+            print_color "$RED" "No remote repository is set up."
+            read -p "Do you want to add a remote repository now? [Y/n]: " add_remote
+            if [[ $add_remote == "Y" || $add_remote == "y" || $add_remote == "" ]]; then
+                read -p "Enter the URL of your GitHub repository: " remote_url
+                git remote add origin "$remote_url"
+                print_color "$GREEN" "Remote repository added."
+            else
+                print_color "$YELLOW" "Push aborted. You need to set up a remote repository first."
+                read -p "Press Enter to continue..."
+                return
+            fi
+        fi
+        git push -u origin main 2> /dev/null || git push -u origin master
+        if [ $? -eq 0 ]; then
+            print_color "$GREEN" "Changes pushed to remote repository successfully."
+        else
+            print_color "$RED" "Failed to push changes. Please check your internet connection and repository permissions."
+        fi
+    fi
+    read -p "Press Enter to continue..."
+}
+
+# Function to pull changes from remote repository
+pull_remote() {
+    if ! check_git_repo_status; then
+        print_color "$RED" "This directory is not a Git repository."
+    else
+        clear
+        print_color "$YELLOW" "Pulling changes from remote repository..."
+        git pull
+        if [ $? -eq 0 ]; then
+            print_color "$GREEN" "Successfully pulled changes from remote repository."
+        else
+            print_color "$RED" "Failed to pull changes. Please check your internet connection and repository permissions."
+        fi
+    fi
+    read -p "Press Enter to continue..."
+}
+
+# Function to show branch menu
+branch_menu() {
+    while true; do
+        clear
+        print_color "$BLUE" "Branch Operations"
+        echo "1. Show current branch"
+        echo "2. Switch to another branch"
+        echo "3. Create a new branch"
+        echo "4. List all branches"
+        echo "5. Return to main menu"
+        read -p "Enter your choice [1-5]: " choice
+        case $choice in
+            1) show_current_branch ;;
+            2) switch_branch ;;
+            3) create_branch ;;
+            4) list_branches ;;
+            5) break ;;
+            *) print_color "$RED" "Invalid choice." ; sleep 2 ;;
+        esac
+    done
+}
+
+# Function to show current branch
+show_current_branch() {
+    clear
+    print_color "$GREEN" "Current branch: $(git rev-parse --abbrev-ref HEAD)"
+    read -p "Press Enter to continue..."
+}
+
+# Function to switch branch
+switch_branch() {
+    clear
+    print_color "$BLUE" "Available branches:"
+    git branch
+    echo
+    read -p "Enter the name of the branch you want to switch to: " branch_name
+    git checkout "$branch_name" 2> /dev/null
+    if [ $? -eq 0 ]; then
+        print_color "$GREEN" "Switched to branch '$branch_name'"
+    else
+        print_color "$RED" "Failed to switch branch. Make sure the branch name is correct."
+    fi
+    read -p "Press Enter to continue..."
+}
+
+# Function to create a new branch
+create_branch() {
+    clear
+    read -p "Enter the name for the new branch: " new_branch
+    git branch "$new_branch" 2> /dev/null
+    if [ $? -eq 0 ]; then
+        print_color "$GREEN" "Branch '$new_branch' created."
+        read -p "Do you want to switch to the new branch? [Y/n]: " switch
+        if [[ $switch == "Y" || $switch == "y" || $switch == "" ]]; then
+            git checkout "$new_branch"
+            print_color "$GREEN" "Switched to branch '$new_branch'"
+        fi
+    else
+        print_color "$RED" "Failed to create branch. It may already exist."
+    fi
+    read -p "Press Enter to continue..."
+}
+
+# Function to list all branches
+list_branches() {
+    clear
+    print_color "$BLUE" "All branches:"
+    git branch -a
+    read -p "Press Enter to continue..."
 }
