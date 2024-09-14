@@ -155,6 +155,7 @@ clear
 show_current_branch() {
 clear
     echo " $(git branch | grep "*") is your current branch"
+    sleep 3
 }
 
 shift_branch() {
