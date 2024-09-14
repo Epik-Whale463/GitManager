@@ -20,14 +20,14 @@ function show_menu() {
     echo "============================================================"
     echo "                      Git Manager                           "
     echo "============================================================"
-    echo "1. Initialize Git Repository --check if repo is initialized or not"
-    echo "2. Check Git Status --get the status of the repository"
-    echo "3. Add Files --add files to the staging area"
-    echo "4. Commit Changes --commit the staged files"
-    echo "5. Push to Remote"
-    echo "6. Pull from Remote"
-    echo "7. Branch Operations"
-    echo "8. Exit"
+    echo "1. Let the git software know you have a project here!"
+    echo "2. Check what git software is keeping track of!"
+    echo "3. Did any changes in the project? Add files now!"
+    echo "4. Want to commit the change you made? Commit now!"
+    echo "5. Want to upload your project to GitHub?"
+    echo "6. Get the latest version of the Cloud Repository!"
+    echo "7. Want to Branch out and code?"
+    echo "8. Exit Git manager"
     echo "=============================="
 }
 
@@ -129,31 +129,43 @@ branch_menu() {
 
 
 show_branch_operations() {
+while true; do
     echo "1. Show current Branch"
     echo "2. Shift to another Branch"
     echo "3. Create another Branch"
+    echo "4. List branches"
+    echo "5. Exit branch operations"
     read -p "Enter your choice [1-3]: " choice
     case $choice in
     1) show_current_branch;;
     2) shift_branch;;
     3) create_branch;;
+    4) list_branches;;
+    5) echo "Exiting branch operations...."; clear; show_menu; read_choice;;
     *) echo "Invalid choice";;
     esac
+done
+}
 
+list_branches() {
+clear
+    git branch
 }
 
 show_current_branch() {
-    grep "*" git branch
-    echo " $cur_branch is your current branch"
+clear
+    echo " $(git branch | grep "*") is your current branch"
 }
 
 shift_branch() {
+clear
     git branch
     read -p "enter branch you want to shift to : " branch_name
     git checkout "$branch_name"
 }
 
 create_branch() {
+clear
     read -p "Enter branch name to create : " create_name
     git branch "$create_name"
     echo "Branch $create_name created!"
