@@ -23,7 +23,7 @@ function show_menu() {
     echo "1. Initialize Git Repository --check if repo is initialized or not"
     echo "2. Check Git Status --get the status of the repository"
     echo "3. Add Files --add files to the staging area"
-    echo "4. Commit Changes"
+    echo "4. Commit Changes --commit the staged files"
     echo "5. Push to Remote"
     echo "6. Pull from Remote"
     echo "7. Branch Operations"
@@ -42,7 +42,7 @@ function read_choice() {
         6) pull_remote ;;
         7) branch_menu ;;
         8) echo "Exiting Git Manager. Goodbye!"; exit 0 ;;
-        *) echo "Invalid choice. Please try again."; sleep 2 ;;
+        *) echo "Invalid choice. Please try ag{ain."; sleep 2 ;;
     esac
 }
 
@@ -119,4 +119,42 @@ else
         echo "Changes commited"
     fi
 fi
+}
+
+branch_menu() {
+   echo "Welcome to branch operations"
+   show_branch_operations
+   read -p "Enter your choice : [1-3]"
+}
+
+
+show_branch_operations() {
+    echo "1. Show current Branch"
+    echo "2. Shift to another Branch"
+    echo "3. Create another Branch"
+    read -p "Enter your choice [1-3]: " choice
+    case $choice in
+    1) show_current_branch;;
+    2) shift_branch;;
+    3) create_branch;;
+    *) echo "Invalid choice";;
+    esac
+
+}
+
+show_current_branch() {
+    grep "*" git branch
+    echo " $cur_branch is your current branch"
+}
+
+shift_branch() {
+    git branch
+    read -p "enter branch you want to shift to : " branch_name
+    git checkout "$branch_name"
+}
+
+create_branch() {
+    read -p "Enter branch name to create : " create_name
+    git branch "$create_name"
+    echo "Branch $create_name created!"
 }
