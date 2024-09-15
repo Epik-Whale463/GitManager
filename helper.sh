@@ -43,24 +43,53 @@ check_user_details() {
         print_color "$GREEN" "Your Git credentials are already configured:"
         echo "Name: $git_name"
         echo "Email: $git_email"
+        read -p "Would you like to re-configure them now? [Y/n]: " ch
+        if [[ $ch == "Y" || $ch == "y" || $ch == "" ]]; then
+            re_config_git_cred
+        fi
+        clear
     fi
+}
+
+re_config_git_cred() {
+    read -p "Enter your GitHub username: " git_username
+    read -p "Enter your GitHub email: " git_email
+    print_color "$BLUE" "Setting your Git email and username..."
+    git config --global user.name "$git_username"
+    git config --global user.email "$git_email"
+    print_color "$GREEN" "Your credentials have been set successfully!"
+    clear
 }
 
 # Function to show menu
 show_menu() {
     clear
-    print_color "$BLUE" "============================================================"
-    print_color "$BLUE" "                      Git Manager                           "
-    print_color "$BLUE" "============================================================"
-    echo "1. Initialize a new Git repository"
-    echo "2. Check the status of your repository"
-    echo "3. Add files to the staging area"
-    echo "4. Commit your changes"
-    echo "5. Push your changes to GitHub"
-    echo "6. Pull the latest changes from GitHub"
-    echo "7. Work with branches"
+    print_color "$GREEN" "============================================================"
+    print_color "$GREEN" "                 Welcome to Git Manager!                    "
+    print_color "$GREEN" "        Your friendly guide to version control              "
+    print_color "$GREEN" "============================================================"
+    echo
+    print_color "$YELLOW" "Getting Started:"
+    echo "1. Create a new project (Initialize a Git repository)"
+    echo "2. See what's changed in your project (Check status)"
+    echo
+    print_color "$YELLOW" "Saving Your Work:"
+    echo "3. Prepare files for saving (Add to staging area)"
+    echo "4. Save your changes (Commit)"
+    echo
+    print_color "$YELLOW" "Collaborating with Others:"
+    echo "5. Send your changes to GitHub (Push)"
+    echo "6. Get the latest updates from GitHub (Pull)"
+    echo
+    print_color "$YELLOW" "Advanced Features:"
+    echo "7. Work on different versions of your project (Manage branches)"
+    echo
+    print_color "$YELLOW" "Other Options:"
     echo "8. Exit Git Manager"
+    echo
     print_color "$BLUE" "============================================================"
+    echo
+    print_color "$YELLOW" "What would you like to do? (Enter a number 1-8)"
 }
 
 # Function to read user choice
