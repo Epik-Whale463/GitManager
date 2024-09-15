@@ -9,14 +9,14 @@ SCRIPT_DIR="$(dirname "$0")"
 # Function to check if this is a new session
 is_new_session() {
     if [ ! -f "$SESSION_TRACKER_FILE" ]; then
-        return 0  # New session
+        return 0 # New session
     else
         current_tty=$(tty)
         stored_tty=$(cat "$SESSION_TRACKER_FILE")
         if [ "$current_tty" != "$stored_tty" ]; then
-            return 0  # New session
+            return 0 # New session
         else
-            return 1  # Existing session
+            return 1 # Existing session
         fi
     fi
 }
@@ -25,6 +25,9 @@ is_new_session() {
 if is_new_session; then
     check_git_installed
     check_user_details
+    touch .gitignore
+    echo response.txt >> .gitignore
+    echo status.txt >> .gitignore
     tty > "$SESSION_TRACKER_FILE"
 fi
 
