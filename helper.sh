@@ -142,9 +142,14 @@ check_status() {
     if ! check_git_repo_status; then
         print_color "$RED" "This directory is not a Git repository."
     else
-        git status
+        git status >status.txt
+        python3 llm.py status.txt &> /dev/null
+        cat response.txt
+        rm status.txt
     fi
+    echo ""
     read -p "Press Enter to continue..."
+    rm response.txt
 }
 
 # Function to add files to staging area
