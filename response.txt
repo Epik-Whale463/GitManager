@@ -1,0 +1,2 @@
+1. Changes: There are modifications to helper.sh, llm.py, and main.sh in the working directory.
+2. Action needed: As there are no added files for commit, one should focus on reviewing the modified files (llm.py, main.sh) and decide whether to push or keep it locally for further development or to discard changes completely.

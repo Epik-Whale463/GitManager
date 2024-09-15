@@ -142,6 +142,7 @@ check_status() {
     if ! check_git_repo_status; then
         print_color "$RED" "This directory is not a Git repository."
     else
+        touch response.txt
         git status >status.txt
         python3 llm.py status.txt &> /dev/null
         cat response.txt
@@ -149,6 +150,7 @@ check_status() {
     fi
     echo ""
     read -p "Press Enter to continue..."
+    sleep 1
     rm response.txt
 }
 

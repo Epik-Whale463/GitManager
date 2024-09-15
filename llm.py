@@ -9,26 +9,32 @@ def summarize_git_status(status_file):
         status_content = file.read()
 
     # Initialize Ollama LLM
-    llm = Ollama(model="qwen2:0.5b")
+    llm = Ollama(model="qwen2:1.5b")
 
-    #prompt template for the LLM
- prompt = PromptTemplate(
-        input_variables=["status"],
-        template="""
-        Given the following Git status information, provide a beginner-friendly summary:
+    # Create a prompt template
+    prompt = PromptTemplate(
+         input_variables=["status"],
+         template="""Analyze the following Git status and provide a structured summary:
 
-        {status}
+                    {status}
 
-        Please summarize the current state of the Git repository in 2-3 short, simple sentences. Focus on:
-        1. Whether there are any changes not yet committed (new, modified, or deleted files).
-        2. Whether all changes are ready to be committed (staged) or if some still need to be added.
-        3. If there's anything the user should do next (like committing changes or pushing to GitHub).
+                    Provide a concise, two-point summary focusing on:
+                    1. Changes: Briefly describe new, modified, or deleted files/folders.
+                    2. Action needed: Suggest the next step based on the current state, should be concise.
 
-        Use simple language and avoid Git jargon where possible. If there's nothing to report, simply state that the repository is up to date.
+                    Guidelines:
+                    - Use clear, concise English.
+                    - Focus on files and folders, not Git commands.
+                    - Be specific about the state of the workspace.
+                    - Provide intelligent insights beyond mere status repetition.
+                    - Maintain a helpful and informative tone.
 
-        Remember, you're helping someone who is new to Git and GitHub.
-        """
-    )
+                    Example format:
+                    "1. Changes: [Brief description of changes]
+                    2. Action: [Suggested next step]"
+                    """
+     )
+
     # Create an LLMChain
     chain = LLMChain(llm=llm, prompt=prompt)
 
