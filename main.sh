@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 # Source the helper script
-source "$(pwd)/helper.sh"
+. "$(dirname "$0")/helper.sh"
 
 # Main function
 check_git_installed
