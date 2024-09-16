@@ -21,7 +21,7 @@ is_new_session() {
     fi
 }
 
-# Run first-time checks if this is a new session
+# first time checks
 if is_new_session; then
     check_git_installed
     check_user_details
@@ -31,7 +31,7 @@ if is_new_session; then
     tty > "$SESSION_TRACKER_FILE"
 fi
 
-# Main loop
+
 while true; do
     show_menu
     read_choice

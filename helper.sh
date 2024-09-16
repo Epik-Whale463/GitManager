@@ -14,6 +14,22 @@ print_color() {
     echo -e "${color}${message}${NC}"
 }
 
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c] %s" "$spinstr" "$message"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\r"
+    done
+    printf "    \r"
+}
+
+
 # Function to check if git is installed
 check_git_installed() {
     if ! command -v git &> /dev/null; then
@@ -43,12 +59,16 @@ check_user_details() {
     clear
 }
 
+
 configure_git_credentials() {
     read -p "Enter your GitHub username: " git_username
     read -p "Enter your GitHub email: " git_email
     print_color "$BLUE" "Setting your Git email and username..."
-    git config --global user.name "$git_username" &> /dev/null
-    git config --global user.email "$git_email" &> /dev/null
+    (
+        git config --global user.name "$git_username" &> /dev/null
+        git config --global user.email "$git_email" &> /dev/null
+    ) &
+    spinner $! "Configuring Git credentials"
     print_color "$GREEN" "Your credentials have been set successfully!"
 }
 
@@ -142,7 +162,8 @@ initialize_repo() {
         print_color "$YELLOW" "This will create a new Git repository in the current directory."
         read -p "Do you want to proceed? [Y/n]: " answer
         if [[ $answer == "Y" || $answer == "y" || $answer == "" ]]; then
-            git init &> /dev/null
+            (git init &> /dev/null) &
+            spinner $! "Initializing Git repository"
             print_color "$GREEN" "Initialized empty Git repository in $(pwd)/.git/"
         else
             print_color "$YELLOW" "Git repository initialization aborted."
@@ -158,8 +179,11 @@ check_status() {
     if ! check_git_repo_status; then
         print_color "$RED" "This directory is not a Git repository."
     else
-        git status > status.txt
-        python3 llm.py status.txt &> /dev/null
+        (
+            git status > status.txt
+            python3 llm.py status.txt &> /dev/null
+        ) &
+        spinner $! "Analyzing Git status"
         if [ -f response.txt ]; then
             cat response.txt
             rm response.txt
@@ -181,23 +205,39 @@ add_files() {
         clear
         print_color "$YELLOW" "Do you want to:"
         echo "1. Add all files"
-        echo "2. Add specific files"
+        echo "2. Add specific files with AI assistance"
         read -p "Enter your choice [1-2]: " ch
         case $ch in
             1)
                 print_color "$BLUE" "Adding all files to the staging area..."
-                git add . &> /dev/null
+                (git add . &> /dev/null) &
+                spinner $! "Adding files to staging area"
                 print_color "$GREEN" "All files have been added to the staging area."
                 ;;
             2)
                 clear
+                print_color "$BLUE" "Analyzing your Git status..."
+                (
+                    git status > status.txt
+                    python3 llm.py add_files_analysis.txt &> /dev/null
+                ) &
+                spinner $! "Analyzing Git status for file selection"
+                if [ -f response.txt ]; then
+                    print_color "$GREEN" "AI Recommendation:"
+                    cat response.txt
+                    rm response.txt
+                else
+                    print_color "$RED" "Failed to generate AI recommendation. Proceeding with manual selection."
+                fi
+                echo
                 print_color "$BLUE" "Files in this directory:"
                 ls -1A
                 echo
                 read -p "Enter the name of the file you want to add (or 'q' to quit): " file_name
                 while [[ $file_name != "q" ]]; do
                     if [[ -e "$file_name" ]]; then
-                        git add "$file_name" &> /dev/null
+                        (git add "$file_name" &> /dev/null) &
+                        spinner $! "Adding $file_name to staging area"
                         print_color "$GREEN" "Added $file_name to the staging area."
                     else
                         print_color "$RED" "File/directory $file_name not found."
