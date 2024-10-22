@@ -1,5 +1,5 @@
 import sys
-from langchain.llms import Ollama
+from langchain_community.llms import Ollama
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
@@ -9,7 +9,7 @@ def summarize_git_status(status_file):
         status_content = file.read()
 
     # Initialize Ollama LLM
-    llm = Ollama(model="qwen2:1.5b")
+    llm = Ollama(model="llama3.2")
 
     # Create a prompt template
     prompt = PromptTemplate(
@@ -26,8 +26,7 @@ def summarize_git_status(status_file):
         - Provide intelligent insights beyond mere status repetition.
         - Maintain a helpful and informative tone.
         Example format:
-        "1. Changes: [Brief description of changes]
-        2. Action: [Suggested next step]"
+        "1. Action: [Suggested next step]"
         """
     )
 
@@ -45,7 +44,7 @@ def analyze_files_for_staging(status_file):
     print("Status Content for Analysis:")
     print(status_content)  # Debug print
 
-    llm = Ollama(model="qwen2:1.5b")
+    llm = Ollama(model="llama3.2")
     prompt = PromptTemplate(
         input_variables=["status"],
         template="""Analyze the following Git status and provide recommendations for staging files:
