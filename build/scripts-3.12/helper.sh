@@ -14,6 +14,7 @@ print_color() {
     echo -e "${color}${message}${NC}"
 }
 
+# Spinner animation for loading states
 spinner() {
     local pid=$1
     local message=$2
@@ -29,29 +30,56 @@ spinner() {
     printf "    \r"
 }
 
+# Function to show welcome message and Git explanation
+show_welcome() {
+    clear
+    print_color "$GREEN" "============================================================"
+    print_color "$GREEN" "                Welcome to GitManager Helper!                   "
+    print_color "$GREEN" "     Your friendly guide to saving and sharing code         "
+    print_color "$GREEN" "============================================================"
+    echo
+    print_color "$YELLOW" "What is this tool?"
+    echo "This is a friendly tool that helps you:"
+    echo "✓ Save different versions of your code"
+    echo "✓ Track changes in your projects"
+    echo "✓ Share your work with others"
+    echo "✓ Collaborate on projects with team members"
+    echo
+    read -p "Press Enter to continue..."
+}
 
 # Function to check if git is installed
 check_git_installed() {
     if ! command -v git &> /dev/null; then
-        print_color "$RED" "Git is not installed. Please install Git and try again."
-        exit 1
+        print_color "$RED" "We need to install Git first!"
+        print_color "$YELLOW" "Git is a free tool that helps you save and share your code."
+        read -p "Would you like help installing Git? [Y/n]: " install_git
+        if [[ $install_git == "Y" || $install_git == "y" || $install_git == "" ]]; then
+            print_color "$BLUE" "Please visit: https://git-scm.com/downloads"
+            print_color "$BLUE" "After installing, run this helper again!"
+            exit 1
+        else
+            print_color "$YELLOW" "Okay! Come back when you're ready to install Git."
+            exit 1
+        fi
     fi
 }
 
 # Function to check user details
 check_user_details() {
-    print_color "$YELLOW" "Checking your Git configuration..."
+    print_color "$YELLOW" "Let's set up your identity..."
     local git_name=$(git config --global user.name)
     local git_email=$(git config --global user.email)
 
     if [[ -z "$git_name" || -z "$git_email" ]]; then
-        print_color "$YELLOW" "Your Git credentials are not fully configured."
+        print_color "$YELLOW" "We need to set up your identity for saving changes."
+        print_color "$BLUE" "This helps others know who made what changes."
         configure_git_credentials
     else
-        print_color "$GREEN" "Your Git credentials are already configured:"
+        print_color "$GREEN" "Your current identity:"
         echo "Name: $git_name"
         echo "Email: $git_email"
-        read -p "Would you like to re-configure them now? [Y/n]: " ch
+        read -p "Would you like to change this? [Y/n]: " ch
         if [[ $ch == "Y" || $ch == "y" || $ch == "" ]]; then
             configure_git_credentials
         fi
@@ -59,67 +87,113 @@ check_user_details() {
     clear
 }
 
-
-configure_git_credentials() {
-    read -p "Enter your GitHub username: " git_username
-    read -p "Enter your GitHub email: " git_email
-    print_color "$BLUE" "Setting your Git email and username..."
-    (
-        git config --global user.name "$git_username" &> /dev/null
-        git config --global user.email "$git_email" &> /dev/null
-    ) &
-    spinner $! "Configuring Git credentials"
-    print_color "$GREEN" "Your credentials have been set successfully!"
-}
-
-# Function to show menu
+# Function to show main menu
 show_menu() {
     clear
-    echo "You are at: $(pwd)"
+    echo "Current folder: $(pwd)"
     print_color "$GREEN" "============================================================"
-    print_color "$GREEN" "                 Welcome to Git Manager!                    "
-    print_color "$GREEN" "        Your friendly guide to version control              "
+    print_color "$GREEN" "                    Project Helper Menu                     "
     print_color "$GREEN" "============================================================"
     echo
-    print_color "$YELLOW" "Getting Started:"
-    echo "0. Manage .gitignore (Hide specific files/folders from Git)"
-    echo "1. Create a new project (Initialize a Git repository)"
-    echo "2. See what's changed in your project (Check status)"
+    print_color "$YELLOW" "🚀 Getting Started:"
+    echo "1. Start tracking a new project (Create new project folder)"
+    echo "2. See what I've changed (View modifications)"
     echo
-    print_color "$YELLOW" "Saving Your Work:"
-    echo "3. Prepare files for saving (Add to staging area)"
-    echo "4. Save your changes (Commit)"
+    print_color "$YELLOW" "💾 Saving Your Work:"
+    echo "3. Save my changes (Backup your work)"
     echo
-    print_color "$YELLOW" "Collaborating with Others:"
-    echo "5. Send your changes to GitHub (Push)"
-    echo "6. Get the latest updates from GitHub (Pull)"
+    print_color "$YELLOW" "🌐 Sharing & Collaboration:"
+    echo "4. Share my project online (Upload to GitHub)"
+    echo "5. Get latest updates (Download team changes)"
     echo
-    print_color "$YELLOW" "Advanced Features:"
-    echo "7. Work on different versions of your project (Manage branches)"
+    print_color "$YELLOW" "🔧 Project Settings:"
+    echo "6. Choose files to ignore (Hide personal files)"
+    echo "7. Work on different versions (Create/switch branches)"
     echo
     print_color "$YELLOW" "Other Options:"
-    echo "8. Exit Git Manager"
+    echo "8. Exit Helper"
     echo
     print_color "$BLUE" "============================================================"
     echo
-    print_color "$YELLOW" "What would you like to do? (Enter a number 0-8)"
+    print_color "$YELLOW" "What would you like to do? (Enter a number 1-8)"
 }
 
 # Function to read user choice
 read_choice() {
-    read -p "Enter your choice [0-8]: " choice
+    read -p "Enter your choice [1-8]: " choice
     case $choice in
-        0) manage_gitignore ;;
         1) initialize_repo ;;
         2) check_status ;;
-        3) add_files ;;
-        4) commit_changes ;;
-        5) push_to_remote ;;
-        6) pull_remote ;;
+        3) save_changes ;;
+        4) push_to_remote ;;
+        5) pull_remote ;;
+        6) manage_gitignore ;;
         7) branch_menu ;;
-        8) print_color "$GREEN" "Exiting Git Manager. Goodbye!"; exit 0 ;;
-        *) print_color "$RED" "Invalid choice. Please try again."; sleep 2 ;;
+        8) print_color "$GREEN" "Thank you for using Project Helper. Goodbye!"; exit 0 ;;
+        *) print_color "$RED" "Please choose a number between 1 and 8."; sleep 2 ;;
     esac
+}
+
+# Combined function for saving changes (staging and committing)
+save_changes() {
+    if ! check_git_repo_status; then
+        print_color "$RED" "This folder isn't set up for tracking yet."
+        print_color "$YELLOW" "First, choose option 1 to start tracking this project."
+        read -p "Press Enter to continue..."
+        return
+    fi
+
+    clear
+    print_color "$YELLOW" "Let's save your changes!"
+    echo
+    print_color "$BLUE" "Here are the files you've changed:"
+    git status --short
+    echo
+    
+    print_color "$YELLOW" "Would you like to:"
+    echo "1. Save all changes"
+    echo "2. Choose specific files to save"
+    read -p "Enter your choice [1-2]: " ch
+    
+    case $ch in
+        1)
+            git add . &> /dev/null
+            print_color "$GREEN" "All changes have been prepared for saving."
+            ;;
+        2)
+            echo
+            print_color "$BLUE" "Available files:"
+            ls -1A
+            echo
+            print_color "$YELLOW" "Type the name of each file you want to save"
+            print_color "$YELLOW" "(Press Enter after each file, type 'done' when finished)"
+            
+            while true; do
+                read -p "File to save (or 'done'): " file_name
+                if [[ $file_name == "done" ]]; then
+                    break
+                elif [[ -e "$file_name" ]]; then
+                    git add "$file_name" &> /dev/null
+                    print_color "$GREEN" "Added $file_name"
+                else
+                    print_color "$RED" "File not found: $file_name"
+                fi
+            done
+            ;;
+    esac
+
+    echo
+    print_color "$YELLOW" "Please describe what changes you made:"
+    read -p "> " commit_msg
+    
+    if git commit -m "$commit_msg" &> /dev/null; then
+        print_color "$GREEN" "Changes saved successfully! 🎉"
+        print_color "$BLUE" "You can now share these changes using option 4 in the menu."
+    else
+        print_color "$RED" "No changes were saved. Make sure you modified some files first."
+    fi
+    
+    read -p "Press Enter to continue..."
 }
 
 # Function to manage .gitignore
