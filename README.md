@@ -29,9 +29,10 @@ A lightweight Bash tool to manage GitHub repositories directly from the command 
    ```bash
    git clone https://github.com/your-username/github-manager-cli.git
    cd github-manager-cli
+   cd scripts
 2. Make the script executable:
    ```bash
-   chmod +x github-manager.sh
+   chmod +x main.sh
 3. Run the script
    ```bash
-   ./github-manager.sh
+   ./main.sh
